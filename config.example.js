@@ -3,6 +3,5 @@
 window.CAMPER_MONITOR_CONFIG = {
   supabaseUrl: "https://YOUR_PROJECT.supabase.co",
   supabasePublishableKey: "YOUR_PUBLISHABLE_KEY",
-  mapStyleUrl: "https://demotiles.maplibre.org/style.json"
+  mapStyleUrl: "https://tiles.openfreemap.org/styles/liberty"
 };
-
