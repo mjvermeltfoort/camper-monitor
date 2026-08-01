@@ -1,1 +1,138 @@
-# camper-monitor
+# Camper Monitor
+
+Een privé dashboard voor één camper. Het dashboard toont actuele accu-, gas-,
+gateway- en locatiegegevens uit Supabase en bewaart onafhankelijke metingen voor
+de grafieken van 24 uur, 7 dagen en 30 dagen.
+
+## Wat staat er in deze repository?
+
+- `camper-monitor-dashboard.html` — het responsieve dashboard met Google-login.
+- `config.example.js` — voorbeeld van de publieke browserconfiguratie.
+- `supabase/migrations/20260801000000_initial_schema.sql` — tabellen, checks,
+  indexen, RLS-policies en dashboard-RPC's.
+- `supabase/bootstrap.example.sql` — eenmalige koppeling van de kijker en de
+  campertelefoon.
+
+De database accepteert bewust maar één rij in `public.camper`. Er is geen
+huishouden-, vloot- of camperkeuzemodel.
+
+## 1. Supabase-project instellen
+
+1. Maak een Supabase-project aan.
+2. Voer de migratie uit met de Supabase CLI, of plak
+   `supabase/migrations/20260801000000_initial_schema.sql` in de SQL Editor.
+3. Schakel in **Authentication > Providers** de Google-provider in en vul de
+   Google OAuth client-ID en client secret in.
+4. Voeg in zowel Google Cloud als Supabase de URL van het dashboard toe als
+   toegestane redirect-URL. Voeg voor lokaal gebruik bijvoorbeeld
+   `http://127.0.0.1:8000/camper-monitor-dashboard.html` toe.
+
+De frontend gebruikt alleen de publieke project-URL en publishable key. Zet
+nooit een secret key of `service_role`-key in browsercode.
+
+## 2. Kijker en gateway aanmaken
+
+1. Open het dashboard eenmaal en log in met het Google-account dat toegang moet
+   krijgen. De eerste poging toont nog "geen toegang" maar maakt de Auth-user
+   wel aan.
+2. Kopieer de UUID van deze gebruiker uit **Authentication > Users**.
+3. Maak in hetzelfde scherm een aparte email/password Auth-user voor de
+   campertelefoon. Gebruik deze account nergens als menselijke login.
+4. Kopieer `supabase/bootstrap.example.sql`, vervang de twee Auth-UUID's en pas
+   campernaam/model aan.
+5. Voer het aangepaste bootstrap-script één keer uit in de SQL Editor.
+
+Het vaste device-ID uit het voorbeeld (`00000000-0000-0000-0000-000000000010`)
+mag worden gewijzigd, maar moet daarna ook door de gateway worden gebruikt.
+
+## 3. Dashboard configureren en starten
+
+```bash
+cp config.example.js config.js
+python3 -m http.server 8000
+```
+
+Vul in `config.js` de project-URL en publishable key uit **Project Settings >
+API** in. `config.js` staat in `.gitignore`. Open daarna:
+
+`http://127.0.0.1:8000/camper-monitor-dashboard.html`
+
+De standaardkaart gebruikt de openbare MapLibre-demostijl. Zet voor productie
+`mapStyleUrl` op een eigen of geschikt gehost kaartstijl-endpoint met passende
+capaciteit en gebruiksvoorwaarden.
+
+## Gateway-authenticatie
+
+De gateway logt in met zijn eigen email/password Auth-user. Bewaar het
+wachtwoord en de verkregen refresh token uitsluitend op de gateway.
+
+```bash
+curl -sS -X POST \
+  "$SUPABASE_URL/auth/v1/token?grant_type=password" \
+  -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"gateway@example.invalid","password":"VERVANG_DIT"}'
+```
+
+Gebruik de `access_token` als bearer token bij inserts. Maak voor elke fysieke
+meting één UUID op de gateway en hergebruik die UUID bij retries. Daardoor maakt
+een retry geen dubbele gebeurtenis. Vraag geen ingevoegde rij terug: gateways
+hebben uitsluitend insertrechten.
+
+```bash
+curl -sS -X POST "$SUPABASE_URL/rest/v1/battery_readings" \
+  -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+  -H "Authorization: Bearer $GATEWAY_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=minimal" \
+  -d '{
+    "id":"11111111-1111-4111-8111-111111111111",
+    "device_id":"00000000-0000-0000-0000-000000000010",
+    "recorded_at":"2026-08-01T10:00:00Z",
+    "soc_pct":91,
+    "voltage_v":12.74,
+    "current_a":-1.8,
+    "power_w":-23
+  }'
+```
+
+De overige endpoints volgen hetzelfde patroon:
+
+| Tabel | Vereiste meetvelden | Optioneel |
+| --- | --- | --- |
+| `gas_readings` | `fill_pct`, `mass_kg`, `temperature_c` | `sensor_battery_pct` |
+| `gateway_readings` | `phone_battery_pct`, `is_charging`, `network_type`, `location_enabled` | `signal_pct` |
+| `location_readings` | `latitude`, `longitude`, `accuracy_m` | `address` |
+
+Iedere insert bevat daarnaast `id`, `device_id` en `recorded_at`. Supabase vult
+`received_at` zelf in; de gateway heeft geen recht om die waarde te overschrijven.
+
+## Drempelwaarden aanpassen
+
+De singleton bevat configureerbare waarschuwingen. Pas ze aan in de SQL Editor:
+
+```sql
+update public.camper
+set battery_warning_pct = 30,
+    battery_critical_pct = 15,
+    gas_warning_pct = 25,
+    gas_critical_pct = 10,
+    phone_warning_pct = 20,
+    stale_after_minutes = 5,
+    offline_after_minutes = 10
+where singleton;
+```
+
+`critical` moet lager zijn dan `warning`, en `offline_after_minutes` mag niet
+lager zijn dan `stale_after_minutes`.
+
+## Beveiligingsmodel
+
+- Anonieme bezoekers hebben geen tabel- of RPC-toegang.
+- Alleen Auth-users in `authorized_viewers` kunnen camperdata lezen.
+- De gateway kan zijn eigen assignment lezen en alleen metingen onder zijn eigen
+  actieve device-ID invoegen.
+- De gateway kan geen telemetrie lezen, wijzigen of verwijderen.
+- Viewers kunnen via de Data API niets wijzigen.
+- De RPC's gebruiken `SECURITY INVOKER`, zodat dezelfde RLS-regels blijven gelden.
+
