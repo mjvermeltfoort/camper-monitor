@@ -127,6 +127,38 @@ where singleton;
 `critical` moet lager zijn dan `warning`, en `offline_after_minutes` mag niet
 lager zijn dan `stale_after_minutes`.
 
+## Brandstofverbruik bijhouden
+
+De brandstofkaart start op **248.654 km** met een tankinhoud van **70 liter**.
+De begintank geldt niet als vol. Registreer bij elke tankbeurt de nieuwe
+kilometerstand, het aantal getankte liters, het betaalde bedrag en of de tank
+daarna volledig vol is.
+
+Het dashboard gebruikt de vol-tot-vol-methode. Een volle tankbeurt vormt een
+meetpunt; bij de volgende volle tankbeurt worden alle tussenliggende liters,
+inclusief gedeeltelijke tankbeurten, gedeeld door de gereden afstand. Daardoor
+verschijnt het eerste betrouwbare verbruik pas na twee volle meetpunten. De
+getoonde actieradius is een schatting voor een volle 70-litertank en geen meting
+van de actuele tankinhoud.
+
+Bedragen worden standaard in euro ingevoerd. De valutalijst bevat alle actuele
+ECB-referentievaluta, met EUR en NOK bovenaan. Voor vreemde valuta haalt de
+browser via `https://api.frankfurter.dev/v2` de laatste beschikbare ECB-dagkoers
+op. De gebruikte koers, koersdatum en omgerekende eurowaarde worden bij de
+tankbeurt opgeslagen en veranderen later niet. De ECB-referentiekoers is
+informatief en kan door bank- of kaarttoeslagen afwijken van het afgeschreven
+bedrag. Zonder bereikbare koersdienst blijft invoer in EUR beschikbaar, maar kan
+een vreemde-valutaboeking niet worden opgeslagen.
+
+De brandstofkaart toont naast de bedragen per tankbeurt ook de totale uitgaven
+in euro en de gewogen gemiddelde europrijs per getankte liter.
+
+Alle geautoriseerde gebruikers kunnen de tankhistorie bekijken. Alleen een
+gebruiker met de rol `owner` kan tankbeurten toevoegen, wijzigen of verwijderen.
+Pas voor een bestaande installatie eerst
+`20260801190000_fuel_tracking.sql` toe en publiceer daarna de nieuwe
+`index.html`.
+
 ## Uitgebreide geschiedenisgrafiek
 
 De dashboard-RPC retourneert per tijdvak het laatste niveau van de huishoudaccu,
