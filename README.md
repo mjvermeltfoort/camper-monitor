@@ -8,8 +8,8 @@ de grafieken van 24 uur, 7 dagen en 30 dagen.
 
 - `index.html` — het responsieve dashboard met Google-login.
 - `config.example.js` — voorbeeld van de publieke browserconfiguratie.
-- `supabase/migrations/20260801000000_initial_schema.sql` — tabellen, checks,
-  indexen, RLS-policies en dashboard-RPC's.
+- `supabase/migrations/` — tabellen, checks, indexen, RLS-policies,
+  gatewayfuncties en dashboard-RPC's in uitvoervolgorde.
 - `supabase/bootstrap.example.sql` — eenmalige koppeling van de kijker en de
   campertelefoon.
 
@@ -19,8 +19,9 @@ huishouden-, vloot- of camperkeuzemodel.
 ## 1. Supabase-project instellen
 
 1. Maak een Supabase-project aan.
-2. Voer de migratie uit met de Supabase CLI, of plak
-   `supabase/migrations/20260801000000_initial_schema.sql` in de SQL Editor.
+2. Voer alle bestanden in `supabase/migrations/` op bestandsnaamvolgorde uit
+   met de Supabase CLI. Bij handmatige installatie plak je ze in dezelfde
+   volgorde in de SQL Editor.
 3. Schakel in **Authentication > Providers** de Google-provider in en vul de
    Google OAuth client-ID en client secret in.
 4. Voeg in zowel Google Cloud als Supabase de URL van het dashboard toe als
@@ -125,6 +126,22 @@ where singleton;
 
 `critical` moet lager zijn dan `warning`, en `offline_after_minutes` mag niet
 lager zijn dan `stale_after_minutes`.
+
+## Uitgebreide geschiedenisgrafiek
+
+De dashboard-RPC retourneert per tijdvak het laatste niveau van de huishoudaccu,
+gasfles en gatewayaccu, plus het gemiddelde van accuspanning en vermogen:
+
+```text
+(bucket_at, battery_soc_pct, gas_fill_pct, battery_voltage_v, average_power_w,
+gateway_battery_pct)
+```
+
+Voor een bestaande installatie voer je eerst de nog niet toegepaste migraties
+vanaf `supabase/migrations/20260801160000_dashboard_electrical_history.sql` in
+bestandsnaamvolgorde uit en publiceer je daarna de nieuwe `index.html`. De oude
+frontend negeert de extra velden, waardoor deze uitrolvolgorde achterwaarts
+compatibel is.
 
 ## Beveiligingsmodel
 
