@@ -6,7 +6,7 @@ de grafieken van 24 uur, 7 dagen en 30 dagen.
 
 ## Wat staat er in deze repository?
 
-- `camper-monitor-dashboard.html` — het responsieve dashboard met Google-login.
+- `index.html` — het responsieve dashboard met Google-login.
 - `config.example.js` — voorbeeld van de publieke browserconfiguratie.
 - `supabase/migrations/20260801000000_initial_schema.sql` — tabellen, checks,
   indexen, RLS-policies en dashboard-RPC's.
@@ -25,7 +25,7 @@ huishouden-, vloot- of camperkeuzemodel.
    Google OAuth client-ID en client secret in.
 4. Voeg in zowel Google Cloud als Supabase de URL van het dashboard toe als
    toegestane redirect-URL. Voeg voor lokaal gebruik bijvoorbeeld
-   `http://127.0.0.1:8000/camper-monitor-dashboard.html` toe.
+   `http://127.0.0.1:8000/index.html` toe.
 
 De frontend gebruikt alleen de publieke project-URL en publishable key. Zet
 nooit een secret key of `service_role`-key in browsercode.
@@ -55,7 +55,7 @@ python3 -m http.server 8000
 Vul in `config.js` de project-URL en publishable key uit **Project Settings >
 API** in. `config.js` staat in `.gitignore`. Open daarna:
 
-`http://127.0.0.1:8000/camper-monitor-dashboard.html`
+`http://127.0.0.1:8000/`
 
 De standaardkaart gebruikt de openbare MapLibre-demostijl. Zet voor productie
 `mapStyleUrl` op een eigen of geschikt gehost kaartstijl-endpoint met passende
@@ -135,4 +135,3 @@ lager zijn dan `stale_after_minutes`.
 - De gateway kan geen telemetrie lezen, wijzigen of verwijderen.
 - Viewers kunnen via de Data API niets wijzigen.
 - De RPC's gebruiken `SECURITY INVOKER`, zodat dezelfde RLS-regels blijven gelden.
-
