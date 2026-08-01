@@ -2,7 +2,7 @@
 
 Een privé dashboard voor één camper. Het dashboard toont actuele accu-, gas-,
 gateway- en locatiegegevens uit Supabase en bewaart onafhankelijke metingen voor
-de grafieken van 24 uur, 7 dagen en 30 dagen.
+de grafieken en de geschatte GPS-route van 24 uur, 7 dagen en 30 dagen.
 
 ## Wat staat er in deze repository?
 
@@ -120,7 +120,7 @@ De overige endpoints volgen hetzelfde patroon:
 | --- | --- | --- |
 | `gas_readings` | `fill_pct`, `mass_kg`, `temperature_c` | `sensor_battery_pct` |
 | `gateway_readings` | `phone_battery_pct`, `is_charging`, `network_type`, `location_enabled` | `signal_pct` |
-| `location_readings` | `latitude`, `longitude`, `accuracy_m` | `address` |
+| `location_readings` | `latitude`, `longitude` | `accuracy_m`, `address` |
 
 Iedere insert bevat daarnaast `id`, `device_id` en `recorded_at`. Supabase vult
 `received_at` zelf in; de gateway heeft geen recht om die waarde te overschrijven.
@@ -191,6 +191,29 @@ vanaf `supabase/migrations/20260801160000_dashboard_electrical_history.sql` in
 bestandsnaamvolgorde uit en publiceer je daarna de nieuwe `index.html`. De oude
 frontend negeert de extra velden, waardoor deze uitrolvolgorde achterwaarts
 compatibel is.
+
+## Geschatte GPS-afstand en route
+
+De locatiekaart toont voor dezelfde periodekeuze als de geschiedenisgrafiek het
+opgeschoonde GPS-spoor en de geschatte gereden afstand. Dit is een GPS-schatting:
+de waarde vervangt de kilometerteller en de vol-tot-vol-afstand bij tankbeurten
+niet. Er wordt geen externe route-matchingdienst gebruikt; opeenvolgende
+geaccepteerde punten worden met rechte lijnsegmenten verbonden.
+
+De RPC gebruikt `recorded_at`, sluit toekomstige metingen uit en accepteert een
+onbekende nauwkeurigheid of maximaal 100 meter. Binnen ieder tijdvak van 10
+seconden blijft het nauwkeurigste punt over. Verplaatsingen onder de grootste van
+10 meter en de nauwkeurigheid van beide punten gelden als stilstandsdrift. Een
+tijdsgat van meer dan 30 minuten of een berekende snelheid boven 180 km/u breekt
+het spoor en telt niet mee. De afstand wordt met de Haversine-formule berekend
+voordat de kaartpunten periode-afhankelijk tot ongeveer 2.500 punten worden
+teruggebracht; begin- en eindpunten van ieder ritsegment blijven behouden.
+
+Alle geautoriseerde viewers kunnen dezelfde routehistorie bekijken als de
+actuele locatie. Voor een bestaande installatie pas je eerst
+`20260801200000_location_history.sql` toe en publiceer je daarna de nieuwe
+`index.html`. Bij de omgekeerde volgorde meldt alleen het routeblok dat de RPC
+niet beschikbaar is; live status, brandstof en grafieken blijven bruikbaar.
 
 ## Beveiligingsmodel
 
