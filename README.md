@@ -7,6 +7,8 @@ de grafieken van 24 uur, 7 dagen en 30 dagen.
 ## Wat staat er in deze repository?
 
 - `index.html` — het responsieve dashboard met Google-login.
+- `manifest.webmanifest` en `assets/icons/` — metadata en iconen voor installatie
+  als webapp.
 - `config.example.js` — voorbeeld van de publieke browserconfiguratie.
 - `supabase/migrations/` — tabellen, checks, indexen, RLS-policies,
   gatewayfuncties en dashboard-RPC's in uitvoervolgorde.
@@ -61,6 +63,21 @@ API** in. `config.js` staat in `.gitignore`. Open daarna:
 De standaardkaart gebruikt de openbare MapLibre-demostijl. Zet voor productie
 `mapStyleUrl` op een eigen of geschikt gehost kaartstijl-endpoint met passende
 capaciteit en gebruiksvoorwaarden.
+
+## Dashboard als webapp installeren
+
+Open het gepubliceerde dashboard eerst in de browser en log in. In Chromium op
+desktop of Android verschijnt `Installeer app` in de hoofdbalk zodra de browser
+installatie aanbiedt. Klik daarop en bevestig de native installatieprompt. Je
+kunt ook de installatieoptie uit het browsermenu gebruiken.
+
+Open het dashboard op iPhone of iPad in Safari, tik op **Deel** en kies
+**Zet op beginscherm**. Safari gebruikt de naam en het Apple-touch-icon van het
+dashboard; daar wordt geen aparte installatieknop getoond.
+
+De webapp heeft bewust geen service worker of offline cache. Login,
+dashboardgegevens, de kaart, Supabase en wisselkoersen blijven een
+internetverbinding vereisen.
 
 ## Gateway-authenticatie
 
