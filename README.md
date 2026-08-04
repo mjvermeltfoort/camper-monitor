@@ -186,6 +186,10 @@ gasfles en gatewayaccu, plus het gemiddelde van accuspanning en vermogen:
 gateway_battery_pct)
 ```
 
+De responsieve geschiedenisgrafiek gebruikt de vastgepinde Chart.js-versie
+`4.5.1` via jsDelivr. De legenda kan reeksen tonen of verbergen; aanwijzen,
+aanraken en de pijltoetsen tonen de waarden van een specifiek meetmoment.
+
 Voor een bestaande installatie voer je eerst de nog niet toegepaste migraties
 vanaf `supabase/migrations/20260801160000_dashboard_electrical_history.sql` in
 bestandsnaamvolgorde uit en publiceer je daarna de nieuwe `index.html`. De oude
