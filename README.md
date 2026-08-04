@@ -219,6 +219,26 @@ actuele locatie. Voor een bestaande installatie pas je eerst
 `index.html`. Bij de omgekeerde volgorde meldt alleen het routeblok dat de RPC
 niet beschikbaar is; live status, brandstof en grafieken blijven bruikbaar.
 
+## Movement Tracker voor Wear OS
+
+Migratie `20260804000000_wear_location_tracker.sql` voegt afzonderlijke
+GPS-apparaten, wandelsessies en vijfsecondenmetingen toe. Publiceer migratie
+vóór `index.html` en `movement-tracking.js`. Dashboard tekent per apparaat een
+eigen route en marker, houdt afstanden gescheiden en toont Watch-sessies met
+hartslag, tempo, hoogte en cadans.
+
+Watch registreert zichzelf met `register_location_tracker(text)` en verstuurt
+alleen batches via `ingest_location_tracker_batch(jsonb,jsonb,jsonb)`. Directe
+table writes blijven ingetrokken. UUID's van sessies, locaties en metingen
+moeten bij retries gelijk blijven. Elke locatie- en meetbatch bevat maximaal
+100 rijen. Kijkers lezen sessies via `get_tracking_sessions(text)` en
+gedownsamplede grafiekdata via `get_tracking_metrics(uuid)`.
+
+Actieve activiteiten synchroniseren normaal ongeveer iedere vijf minuten.
+Dashboard ververst live data, routes en activiteiten iedere minuut. Watch-data
+kan daarom circa vijf minuten achterlopen; lokaal vastleggen stopt niet bij een
+netwerkfout.
+
 ## Beveiligingsmodel
 
 - Anonieme bezoekers hebben geen tabel- of RPC-toegang.
